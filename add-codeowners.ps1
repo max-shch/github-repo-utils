@@ -1,12 +1,8 @@
-# Define the list of git repositories
-$repositories = @(
-    "https://github.com/user/repo1.git",
-    "https://github.com/user/repo2.git"
-# Add more repositories as needed
-)
+# Read the list of git repositories from the file
+$repositories = Get-Content -Path "repositories.txt"
 
-# Define the CODEOWNERS content
-$CODEOWNERS_CONTENT = "* @your-github-username"
+# Read the CODEOWNERS content from the file
+$CODEOWNERS_CONTENT = Get-Content -Path "TARGET-CODEOWNERS.txt"
 
 foreach ($repo in $repositories) {
     # Extract the repo name from the URL
