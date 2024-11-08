@@ -2,7 +2,7 @@
 $gitHubOrg = "alpha-eng"
 $repoName = "your-repo-name"
 $accessToken = $env:GITHUB_ACCESS_TOKEN
-$gitHubBaseUrl = "https://api.github.com"
+$gitHubBaseUrl = "https://your-github-enterprise-server/api/v3"
 
 # Define the headers
 $headers = @{
