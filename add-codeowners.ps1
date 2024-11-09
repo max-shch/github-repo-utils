@@ -20,6 +20,11 @@ foreach ($repo in $repositories) {
     # Get all branches that start with "release/"
     $branches = git branch -r | Where-Object { $_ -match "origin/release/" } | ForEach-Object { $_.Trim() -replace "origin/", "" }
 
+    if ($branches.Count -eq 0) {
+        Write-Host "No release branches found for repository: $repoName"
+        $branches = @()
+    }
+
     # Add develop and master branches if they exist
     $additionalBranches = @("develop", "master")
     foreach ($branch in $additionalBranches) {
