@@ -17,8 +17,8 @@ foreach ($repo in $repositories) {
     Write-Host "Fetching all branches for repository: $repoName"
     git fetch --all
 
-    # Get all branches that start with "release/"
-    $branches = git branch -r | Where-Object { $_ -match "origin/release/" } | ForEach-Object { $_.Trim() -replace "origin/", "" }
+    # Get all branches that start with "release/" r match ".*\..*\.x"
+    $branches = git branch -r | Where-Object { $_ -match "origin/release\/.*" -or $_ -match "origin/\d+\.\d+\.x"} | ForEach-Object { $_.Trim() -replace "origin/", "" }
 
     if ($branches.Count -eq 0) {
         Write-Host "No release branches found for repository: $repoName"
@@ -39,36 +39,45 @@ foreach ($repo in $repositories) {
         Write-Host "Checking out branch: $branch"
         git checkout $branch
 
-        # Remove the old CODEOWNERS file from the root folder if it exists
-        if (Test-Path -Path "CODEOWNERS") {
-            Write-Host "Removing old CODEOWNERS file from branch: $branch"
-            Remove-Item -Path "CODEOWNERS"
-            git rm CODEOWNERS
+        # Check if the CODEOWNERS file exists and compare its content
+        $codeownersPath = ".github\CODEOWNERS"
+        $updateCodeowners = $true
+        if (Test-Path -Path $codeownersPath) {
+            $existingContent = Get-Content -Path $codeownersPath
+            if ($existingContent -eq $CODEOWNERS_CONTENT) {
+                Write-Host "CODEOWNERS file is already up to date in branch: $branch"
+                $updateCodeowners = $false
+            }
         }
 
-        # Create .github directory if it doesn't exist
-        if (-not (Test-Path -Path ".github")) {
-            Write-Host "Creating .github directory in branch: $branch"
-            New-Item -ItemType Directory -Path ".github"
+        if ($updateCodeowners) {
+            # Remove the old CODEOWNERS file from the root folder if it exists
+            if (Test-Path -Path "CODEOWNERS") {
+                Write-Host "Removing old CODEOWNERS file from branch: $branch"
+                Remove-Item -Path "CODEOWNERS"
+                git rm CODEOWNERS
+            }
+
+            # Create .github directory if it doesn't exist
+            if (-not (Test-Path -Path ".github")) {
+                Write-Host "Creating .github directory in branch: $branch"
+                New-Item -ItemType Directory -Path ".github"
+            }
+
+            # Add the CODEOWNERS file to the .github directory
+            Write-Host "Adding CODEOWNERS file to .github directory in branch: $branch"
+            $CODEOWNERS_CONTENT | Out-File -FilePath $codeownersPath -Encoding utf8
+            git add $codeownersPath
+
+            # Commit the changes
+            Write-Host "Committing changes in branch: $branch"
+            git commit -m "Move CODEOWNERS file to .github folder"
+
+            # Push the changes
+            Write-Host "Pushing changes to branch: $branch"
+            git push origin $branch
         }
-
-        # Add the CODEOWNERS file to the .github directory
-        Write-Host "Adding CODEOWNERS file to .github directory in branch: $branch"
-        $CODEOWNERS_CONTENT | Out-File -FilePath ".github\CODEOWNERS" -Encoding utf8
-        git add .github\CODEOWNERS
-
-        # Commit the changes
-        Write-Host "Committing changes in branch: $branch"
-        git commit -m "Move CODEOWNERS file to .github folder"
-
-        # Push the changes
-        Write-Host "Pushing changes to branch: $branch"
-        git push origin $branch
     }
-
-    # Check out the main branch again
-    Write-Host "Checking out main branch"
-    git checkout main
 
     # Return to the parent directory
     Write-Host "Returning to parent directory"
