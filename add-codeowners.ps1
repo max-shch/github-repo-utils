@@ -1,8 +1,14 @@
+param (
+    [string]$CodeOwnersFile = "TARGET-CODEOWNERS.txt",
+    [Parameter(Mandatory)]
+    [string]$ReposFileName
+)
+
 # Read the list of git repositories from the file
-$repositories = Get-Content -Path "repositories.txt"
+$repositories = Get-Content -Path "$ReposFileName"
 
 # Read the CODEOWNERS content from the file
-$CODEOWNERS_CONTENT = Get-Content -Path "TARGET-CODEOWNERS.txt"
+$CODEOWNERS_CONTENT = Get-Content -Path "$CodeOwnersFile"
 
 foreach ($repo in $repositories) {
     # Extract the repo name from the URL
@@ -71,7 +77,7 @@ foreach ($repo in $repositories) {
 
             # Commit the changes
             Write-Host "Committing changes in branch: $branch"
-            git commit -m "Move CODEOWNERS file to .github folder"
+            git commit -F "../commit-message.txt"
 
             # Push the changes
             Write-Host "Pushing changes to branch: $branch"
